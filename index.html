@@ -3007,28 +3007,39 @@ video:-webkit-full-screen {
         // ============================================
         // COUNTER ANIMATION
         // ============================================
-        const counterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const el = entry.target;
-                    const target = parseInt(el.getAttribute('data-count'));
-                    if (isNaN(target)) return;
-                    let current = 0;
-                    const increment = target / 60;
-                    const timer = setInterval(() => {
-                        current += increment;
-                        if (current >= target) {
-                            current = target;
-                            clearInterval(timer);
-                        }
-                        el.textContent = Math.floor(current) + (el.textContent.includes('+') || target > 10 ? '+' : '');
-                    }, 25);
-                    counterObserver.unobserve(el);
-                }
-            });
-        }, { threshold: 0.5 });
+        function formatCount(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + 'M';
+    }
+    if (num >= 1000) {
+        return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'K';
+    }
+    return num.toString();
+}
 
-        document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const el = entry.target;
+            const target = parseInt(el.getAttribute('data-count'));
+            if (isNaN(target)) return;
+            const showPlus = el.textContent.includes('+') || target > 10;
+            let current = 0;
+            const increment = target / 60;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                el.textContent = formatCount(Math.floor(current)) + (showPlus ? '+' : '');
+            }, 25);
+            counterObserver.unobserve(el);
+        }
+    });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
 
 // ============================================
 // PORTFOLIO FILTER — UPGRADED
